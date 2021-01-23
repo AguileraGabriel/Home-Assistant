@@ -3,9 +3,9 @@
 #include <PubSubClient.h>
 
 //=========================== Configuración de parámetro de conectividad =========================================//
-byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };  //dirección MAC del dispositivo: Ethernet Shield
-IPAddress ip(192, 168, 1, 204);                           //ip del dispositivo.
-IPAddress server(192, 168, 1, 111);                       //ip del broker MQTT: mosquitto.
+byte mac[]    = {  0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD };  //dirección MAC del dispositivo: Ethernet Shield
+IPAddress ip(192, 168, 0, 14);                           //ip del dispositivo.
+IPAddress server(192, 168, 0, 2);                       //ip del broker MQTT: mosquitto.
 EthernetClient ethClient;                                 //cliente ethernet
 PubSubClient client(ethClient);                           //cliente MQTT, partiendo del anterior. 
 //===============================================================================================================//
