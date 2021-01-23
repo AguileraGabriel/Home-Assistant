@@ -41,7 +41,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("arduinoClient","marcos","abc1234")) {
+    if (client.connect("arduinoClient","UserMQTTBraker","passwordMQTTBraker")) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish("outTopic","hello world");
