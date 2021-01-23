@@ -3,10 +3,10 @@
 
 // Update these with values suitable for your network.
 
-const char* ssid = "Sanchez";
-const char* password = "1142221067";
+const char* ssid = "Your SSID";
+const char* password = "Your Pasword";
 //const char* mqtt_server = "broker.mqtt-dashboard.com";
-IPAddress mqtt_server(192, 168, 1, 111);                       //ip del broker MQTT: mosquitto.
+IPAddress mqtt_server(---, ---, -, ---);                       //ip del broker MQTT: mosquitto.
 WiFiClient espClient;
 PubSubClient client(espClient);
 unsigned long lastMsg = 0;
