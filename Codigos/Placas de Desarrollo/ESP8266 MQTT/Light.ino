@@ -12,9 +12,9 @@ PubSubClient client(espClient);
 
 //============================ PINES ============================================================================//
 const int buttonPin = 0; //D3 tiene resistencia Pull-Down.
-const int ledPin =  2; //D4 led incorporado.
-bool Anterior = false;
-bool buttonState = false;
+const int ledPin =  2;   //D4 led incorporado.
+bool Anterior = false;   //variable utilizada para guardar estado del boton y que solo se presione una vez.
+bool lightState = false;//estado del PIN.
 //===============================================================================================================//
 
 
@@ -32,10 +32,11 @@ void setup()
 void loop()
 {
   if (!client.connected()) {
+    ONOFF("M");
     reconnect();
-
   }
   client.loop();
+  ONOFF("M");
 }
 
 
@@ -123,30 +124,36 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void ONOFF(String modo){
     if((modo=="ON") || (modo=="OFF")){
         if(modo=="ON"){
-            buttonState = HIGH;
+            lightState = HIGH;
             client.publish("Eluz","ON");
+            Serial.print("estado del PIN: ");
+            Serial.println(lightState);
         }
         else{
-            buttonState = LOW;
+            lightState = LOW;
             client.publish("Eluz","OFF");
+            Serial.print("estado del PIN: ");
+            Serial.println(lightState);
         }
     }
     else{
         if (digitalRead(buttonPin) == HIGH) {
             if(Anterior == false){
             //Serial.print("presionado ");
-            buttonState = !buttonState;
+            lightState = !lightState;
             //Serial.print("Estado: ");
-            //Serial.println(buttonState);
+            //Serial.println(lightState);
+            Serial.print("estado del PIN: ");
+            Serial.println(lightState);
             Anterior = true;
             }
             delay(10);
         }
         else { Anterior = false;}
         }
-    Serial.print("estado del PIN: ");
-    Serial.println(buttonState);
-    digitalWrite(ledPin,buttonState);
+
+    digitalWrite(ledPin,lightState);
+    //if(client.connected())
 }
 
 //===============================================================================================================//
