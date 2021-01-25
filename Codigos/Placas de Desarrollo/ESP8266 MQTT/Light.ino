@@ -52,7 +52,7 @@ void setup_wifi() {
 
   WiFi.mode(WIFI_STA); //wifi en modo estación es decir un cliente como la PC.
   WiFi.begin(ssid, password);
-
+  
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -66,6 +66,51 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+
+/*
+//======================= Funcion para Conectarse al Wi-Fi========================
+void setup_wifi() {
+  int periodo = 500, estadoWifi;
+  unsigned long TiempoAhora = 0;
+
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.mode(WIFI_STA); //wifi en modo estación es decir un cliente como la PC.
+  WiFi.begin(ssid, password);
+
+  //Serial.print("WIFI.status: ");
+  //Serial.println(WiFi.status());
+
+  estadoWifi = WiFi.status();
+  Serial.print("WIFI.status: ");
+  Serial.println(estadoWifi);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    
+    if(millis() > TiempoAhora + periodo){
+      TiempoAhora = millis();
+      //estadoWifi = WiFi.status();
+      Serial.print("millis");
+      //Serial.println(estadoWifi);
+    }
+    
+    delay(500);
+    Serial.print(".");
+  }
+
+  randomSeed(micros());
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+//===============================================================================================================//
+*/
 
 //=========================== Función para conectarse, publicar y subscribirse ==================================//
 void reconnect() {
@@ -122,19 +167,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 //========================= Función para Interactuar con el pulsador y activar PIN D4 ===========================//
 void ONOFF(String modo){
+    char* estado[]={"OFF", "ON"};
     if((modo=="ON") || (modo=="OFF")){
         if(modo=="ON"){
             lightState = HIGH;
-            client.publish("Eluz","ON");
+            //client.publish("Eluz","ON");
             Serial.print("estado del PIN: ");
             Serial.println(lightState);
         }
         else{
             lightState = LOW;
-            client.publish("Eluz","OFF");
+            //client.publish("Eluz","OFF");
             Serial.print("estado del PIN: ");
             Serial.println(lightState);
         }
+    client.publish("Eluz",estado[lightState]);
     }
     else{
         if (digitalRead(buttonPin) == HIGH) {
@@ -145,6 +192,9 @@ void ONOFF(String modo){
             //Serial.println(lightState);
             Serial.print("estado del PIN: ");
             Serial.println(lightState);
+            if(client.connected()){
+              client.publish("Eluz",estado[lightState]);
+            }
             Anterior = true;
             }
             delay(10);
@@ -153,7 +203,6 @@ void ONOFF(String modo){
         }
 
     digitalWrite(ledPin,lightState);
-    //if(client.connected())
+    
 }
-
 //===============================================================================================================//
