@@ -41,76 +41,35 @@ void loop()
 
 
 
-//======================= Funcion para Conectarse al Wi-Fi========================
+//======================= Funcion para Conectarse al Wi-Fi=======================================================//
 void setup_wifi() {
-
   delay(10);
   // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
-  WiFi.mode(WIFI_STA); //wifi en modo estación es decir un cliente como la PC.
-  WiFi.begin(ssid, password);
+  WiFi.mode(WIFI_STA);                    //WIFI en modo estación es decir un cliente como la PC.
+  WiFi.begin(ssid, password);             //Inicia conexión con la red WIFI.
   
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  unsigned long TiempoAhora = 0;          //Variable necesaria para almacenar valor de millis(). 
+  int estadoWifi = WiFi.status();         //Variable que almacena estado de la conexión WIFI.
+  while (estadoWifi != WL_CONNECTED) {    //Mientras el estado de la conexión sea distinto de "conectado", se ejecuta.
+     if(millis() > TiempoAhora + 500){    //millis():Devuelve el número de milisegundos transcurridos desde que la placa comenzó a ejecutar el Sketch. Si ese número es mayor a TiempoAhora(inicialmente vale cero y luego de entrar en el if toma el valor de millis() de ese momento) más el tiempo de retardo deseado... se ejecuta el if. 
+        TiempoAhora = millis();           //TiempoAhora adquiere el valor de millis() de ese momento.
+        estadoWifi = WiFi.status();       //actualiza "estadoWifi" con el estado de la conexicón WIFI de ese momento. 
+        Serial.print(".");
+     } 
+     else ONOFF("M");                     //en caso de que no haya transcurrido el tiempo necesario para entrar al if, se ejecuta la función para actualizar estado de las luces.
   }
-
-  randomSeed(micros());
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-}
-
-
-/*
-//======================= Funcion para Conectarse al Wi-Fi========================
-void setup_wifi() {
-  int periodo = 500, estadoWifi;
-  unsigned long TiempoAhora = 0;
-
-  delay(10);
-  // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.mode(WIFI_STA); //wifi en modo estación es decir un cliente como la PC.
-  WiFi.begin(ssid, password);
-
-  //Serial.print("WIFI.status: ");
-  //Serial.println(WiFi.status());
-
-  estadoWifi = WiFi.status();
-  Serial.print("WIFI.status: ");
-  Serial.println(estadoWifi);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    
-    if(millis() > TiempoAhora + periodo){
-      TiempoAhora = millis();
-      //estadoWifi = WiFi.status();
-      Serial.print("millis");
-      //Serial.println(estadoWifi);
-    }
-    
-    delay(500);
-    Serial.print(".");
-  }
-
-  randomSeed(micros());
-
+  
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 }
 //===============================================================================================================//
-*/
+
 
 //=========================== Función para conectarse, publicar y subscribirse ==================================//
 void reconnect() {
