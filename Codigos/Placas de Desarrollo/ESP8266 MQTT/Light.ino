@@ -1,6 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-
+ /*
 //=========================== Configuración de parámetro de conectividad =========================================//
 const char* ssid = "Your SSID";
 const char* password = "Your Password";
@@ -8,7 +8,26 @@ IPAddress mqtt_server(---, ---, -, ---);                       //ip del broker M
 WiFiClient espClient;
 PubSubClient client(espClient);
 //===============================================================================================================//
+*/
 
+//=========================== Configuración parámetros de conectividad =========================================//
+//Configuraciones red WIFI:
+const char* ssid = "Your SSID";                //Nombre red WIFI.                 
+const char* password = "Your Password";         //Contraseña red WIFI.
+
+//Configuraciones del Broker MQTT: 
+# define broker_User "User Broker"                //Usuario Broker MQTT.
+# define broker_Password "password Broker"           //Contraseña Broker MQTT. 
+# define device_Name_MQTT "Device name"         //Nombre del dispositivo al momento de conectarse al broker.                   
+IPAddress mqtt_server(0, 0, 0, 0);     //IP del broker MQTT: mosquitto.
+
+//TÓPICOS:
+# define command_topic "luz"                 //tópico donde se subscribe el dispositivo para recibir órdenes del broker.
+# define state_topic "Eluz"                  //tópico donde publica el estado del dispositivo. 
+//===============================================================================================================//
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 //============================ PINES ============================================================================//
 const int buttonPin = 0; //D3 tiene resistencia Pull-Down.
@@ -32,82 +51,73 @@ void setup()
 void loop()
 {
   if (!client.connected()) {
-    ONOFF("M");
+    ONOFF("M");                 //por si no anda MQTT
     reconnect();
   }
   client.loop();
-  ONOFF("M");
+  ONOFF("M");                   //Todo el tiempo lee el pulsador
 }
 
 
-
-//======================= Funcion para Conectarse al Wi-Fi========================
+//======================= Funcion para Conectarse al Wi-Fi=======================================================//
 void setup_wifi() {
-
   delay(10);
   // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
-  WiFi.mode(WIFI_STA); //wifi en modo estación es decir un cliente como la PC.
-  WiFi.begin(ssid, password);
+  WiFi.mode(WIFI_STA);                    //WIFI en modo estación es decir un cliente como la PC.
+  WiFi.begin(ssid, password);             //Inicia conexión con la red WIFI.
   
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  unsigned long TiempoAhora = 0;          //Variable necesaria para almacenar valor de millis(). 
+  int estadoWifi = WiFi.status();         //Variable que almacena estado de la conexión WIFI.
+  while (estadoWifi != WL_CONNECTED) {    //Mientras el estado de la conexión sea distinto de "conectado", se ejecuta.
+     if(millis() > TiempoAhora + 500){    //millis():Devuelve el número de milisegundos transcurridos desde que la placa comenzó a ejecutar el Sketch. Si ese número es mayor a TiempoAhora(inicialmente vale cero y luego de entrar en el if toma el valor de millis() de ese momento) más el tiempo de retardo deseado... se ejecuta el if. 
+        TiempoAhora = millis();           //TiempoAhora adquiere el valor de millis() de ese momento.
+        estadoWifi = WiFi.status();       //actualiza "estadoWifi" con el estado de la conexicón WIFI de ese momento. 
+        Serial.print(".");
+     } 
+     else ONOFF("M");                     //en caso de que no haya transcurrido el tiempo necesario para entrar al if, se ejecuta la función para actualizar estado de las luces.
   }
-
-  randomSeed(micros());
-
+  
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 }
-
+//===============================================================================================================//
 
 /*
-//======================= Funcion para Conectarse al Wi-Fi========================
-void setup_wifi() {
-  int periodo = 500, estadoWifi;
-  unsigned long TiempoAhora = 0;
+//=========================== Función para conectarse, publicar y subscribirse ==================================//
+void reconnect() { 
+  char* estado[]={"OFF", "ON"};
 
-  delay(10);
-  // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
-  WiFi.mode(WIFI_STA); //wifi en modo estación es decir un cliente como la PC.
-  WiFi.begin(ssid, password);
-
-  //Serial.print("WIFI.status: ");
-  //Serial.println(WiFi.status());
-
-  estadoWifi = WiFi.status();
-  Serial.print("WIFI.status: ");
-  Serial.println(estadoWifi);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    
-    if(millis() > TiempoAhora + periodo){
-      TiempoAhora = millis();
-      //estadoWifi = WiFi.status();
-      Serial.print("millis");
-      //Serial.println(estadoWifi);
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect(device_Name_MQTT, broker_User, broker_Password)) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("outTopic","hello world");
+      // ... and resubscribe 
+      client.subscribe(command_topic);
+      client.publish(state_topic,estado[digitalRead(ledPin)]);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      //delay(5000);
+      unsigned long TiempoAhora = millis();
+      while(millis() < TiempoAhora + 5000){
+        yield();
+        ONOFF("M");
+        //función.
+      }
     }
-    
-    delay(500);
-    Serial.print(".");
   }
-
-  randomSeed(micros());
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
 }
 //===============================================================================================================//
 */
@@ -115,26 +125,32 @@ void setup_wifi() {
 //=========================== Función para conectarse, publicar y subscribirse ==================================//
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (client.connect("arduinoClient","user","password")) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("outTopic","hello world");
-      // ... and resubscribe
-      client.subscribe("luz");
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+  char* estados[]={"OFF", "ON"};
+  unsigned long TiempoAhora = 0;
+  bool estado = client.connected();   
+  while (!estado) {
+    if(millis() > TiempoAhora + 4000){    //millis():Devuelve el número de milisegundos transcurridos desde que la placa comenzó a ejecutar el Sketch. Si ese número es mayor a TiempoAhora(inicialmente vale cero y luego de entrar en el if toma el valor de millis() de ese momento) más el tiempo de retardo deseado... se ejecuta el if. 
+      TiempoAhora = millis();           //TiempoAhora adquiere el valor de millis() de ese momento.
+      estado = client.connected();    
+      Serial.print("Attempting MQTT connection...");
+      // Attempt to connect
+      if (client.connect(device_Name_MQTT, broker_User, broker_Password)) {
+        Serial.println("connected");
+        // Once connected, publish an announcement...
+        client.publish("outTopic","hello world");
+        // ... and resubscribe 
+        client.subscribe(command_topic);
+        client.publish(state_topic,estados[digitalRead(ledPin)]);
+      } else {
+        Serial.print("failed, rc=");
+        Serial.print(client.state());
+        Serial.println(" try again in 5 seconds");
+        }
     }
+    ONOFF("M");
   }
 }
 //===============================================================================================================//
-
 
 
 //=========================== Función para recibir mensajes =====================================================// 
@@ -151,7 +167,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     msjRecibido += (char)payload[i];
   }
   Serial.println();
-   if (strcmp(topic, "luz") == 0) {
+   if (strcmp(topic, command_topic) == 0) {
        if(msjRecibido == "ON"){
             //client.publish("Eluz","ON");
             ONOFF("ON");
@@ -181,7 +197,7 @@ void ONOFF(String modo){
             Serial.print("estado del PIN: ");
             Serial.println(lightState);
         }
-    client.publish("Eluz",estado[lightState]);
+    client.publish(state_topic,estado[lightState]);
     }
     else{
         if (digitalRead(buttonPin) == HIGH) {
@@ -193,7 +209,7 @@ void ONOFF(String modo){
             Serial.print("estado del PIN: ");
             Serial.println(lightState);
             if(client.connected()){
-              client.publish("Eluz",estado[lightState]);
+              client.publish(state_topic,estado[lightState]);
             }
             Anterior = true;
             }
