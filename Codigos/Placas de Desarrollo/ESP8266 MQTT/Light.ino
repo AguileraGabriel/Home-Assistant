@@ -58,7 +58,6 @@ void loop()
   ONOFF("M");                   //Todo el tiempo lee el pulsador
 }
 
-
 //======================= Funcion para Conectarse al Wi-Fi=======================================================//
 void setup_wifi() {
   delay(10);
